@@ -1,8 +1,3 @@
-Perfecto. Aquí va una versión **mucho más minimal**, directa y limpia, pensada **100% para un repo público de GitHub**.
-Sin ruido, sin marketing, sin texto innecesario.
-
----
-
 # GGSTORE
 
 Proyecto personal de e-commerce creado como práctica y pieza de portfolio.
