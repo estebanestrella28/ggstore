@@ -1,0 +1,36 @@
+POST http://localhost:1337/api/products
+Authorization: Bearer efd942a0e3e198c54340591c86bad97a20643afacabd54386a0a31a0b199c62e0376761ae79247fbf142252b5de9ac6c45d1d50257c137c0128f9663472fad5e43f7a50ed07c300c7c7bfd9fe323ff50b2398d7049c85bb3cc6680a085da3bc45b8bac2c93efd05869e3a27efe24aed21a2a961238943ef5bbb6f95e2da1159e
+Content-Type: application/json
+
+{
+  "data": {
+    "title": "Base Mate Alta Cobertura",
+    "description": "Base mate de larga duración, ideal para piel mixta a grasa.",
+    "price": 22.0,
+    "slug": "base-mate-alta-cobertura",
+    "category": 3,
+    "stock": 0
+  }
+}
+
+
+
+###
+
+POST http://localhost:1337/api/categories
+Authorization: Bearer efd942a0e3e198c54340591c86bad97a20643afacabd54386a0a31a0b199c62e0376761ae79247fbf142252b5de9ac6c45d1d50257c137c0128f9663472fad5e43f7a50ed07c300c7c7bfd9fe323ff50b2398d7049c85bb3cc6680a085da3bc45b8bac2c93efd05869e3a27efe24aed21a2a961238943ef5bbb6f95e2da1159e
+Content-Type: application/json
+
+{
+  "data": {
+    "name": "Base",
+    "slug": "base"
+  }
+}
+
+###
+GET http://localhost:1337/api/categories?populate[image][fields][0]=url
+Authorization: Bearer efd942a0e3e198c54340591c86bad97a20643afacabd54386a0a31a0b199c62e0376761ae79247fbf142252b5de9ac6c45d1d50257c137c0128f9663472fad5e43f7a50ed07c300c7c7bfd9fe323ff50b2398d7049c85bb3cc6680a085da3bc45b8bac2c93efd05869e3a27efe24aed21a2a961238943ef5bbb6f95e2da1159e
+Content-Type: application/json
+
+

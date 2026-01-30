@@ -1,9 +1,19 @@
-import Image from "next/image";
+import { getCategories } from "@/lib/strapi";
 
-export default function Home() {
+export default async function Home() {
+  const categories = await getCategories();
+
   return (
-    <main className="flex min-h-screen w-full flex-col items-center justify-between  bg-white dark:bg-gray-950">
-      <h1>Hello World</h1>
+    <main className="flex gap-2 justify-center items-center w-full h-screen m-auto">
+      {categories.map((cat: any) => {
+        return (
+          <div key={cat.id}>
+            <img src={cat.image} width={100} height={100} alt={cat.slug} />
+            <h2>{cat.name}</h2>
+            <p>{cat.id}</p>
+          </div>
+        );
+      })}
     </main>
   );
 }
