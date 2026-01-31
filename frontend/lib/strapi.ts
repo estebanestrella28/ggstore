@@ -33,3 +33,22 @@ export function getCategories() {
     });
   });
 }
+
+export function getProducts() {
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat("es-DO", {
+      style: "currency",
+      currency: "DOP",
+    }).format(value);
+
+  return query("products?populate[images][fields][0]=url").then((res) => {
+    return res.map((product) => {
+      const { id, title, price: rawPrice, slug, images: rawImages } = product;
+      const images = rawImages.map((image) => `${STRAPI_HOST}${image.url}`);
+
+      const price = formatCurrency(rawPrice);
+
+      return { id, title, price, slug, images };
+    });
+  });
+}
