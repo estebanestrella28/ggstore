@@ -1,3 +1,4 @@
+import { FiltersState } from "@/types/filters";
 import formatCurrency from "@/util/formatCurrency";
 
 const { STRAPI_HOST, STRAPI_TOKEN } = process.env;
@@ -38,13 +39,17 @@ export function getCategories() {
   });
 }
 
-export function getProducts({
-  categoryId,
-}: {
-  categoryId: string | undefined;
-}) {
+type getProductsProps = {
+  filters?: FiltersState;
+};
+
+export function getProducts({ filters }: getProductsProps = {}) {
+  const newFilters = filters?.category
+    ? `filters[category][slug][$eq]=${filters.category}`
+    : "";
+
   return query(
-    `products?filters[category][slug][$eq]=${categoryId}&populate[images][fields][0]=url&populate[category][fields][0]=name`,
+    `products?${newFilters}&populate[images][fields][0]=url&populate[category][fields][0]=name`,
   ).then((res) => {
     const { data, meta } = res;
 

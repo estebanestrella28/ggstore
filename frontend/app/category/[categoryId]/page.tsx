@@ -1,4 +1,4 @@
-import CatalogGrid from "@/app/catalog/CatalogGrid";
+import ProductsGrid from "@/app/catalog/ProductsGrid";
 import { getProducts } from "@/lib/strapi";
 
 export default async function CategoryPage({
@@ -15,7 +15,7 @@ export default async function CategoryPage({
 
   return (
     <>
-      <CatalogGrid categoryId={categoryId} />
+      <ProductsGrid categoryId={categoryId} />
     </>
   );
 }

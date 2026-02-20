@@ -1,7 +1,38 @@
+"use client";
+import { useRouter, useSearchParams } from "next/navigation";
+
 export default function Filters() {
+  const router = useRouter();
+  const params = useSearchParams();
+  const category = params.get("category") ?? "";
+
+  const updateFilter = (key: string, value: string) => {
+    const newParams = new URLSearchParams(params);
+    newParams.set(key, value);
+
+    router.push(`/catalog?${newParams.toString()}`);
+  };
+
   return (
     <div className="bg-white rounded-2xl shadow-sm p-6 space-y-8">
       <h2 className="text-lg font-semibold">Filtros</h2>
+
+      {/* Categoría */}
+      <div>
+        <h3 className="text-sm font-medium mb-3">Categoría</h3>
+
+        <select
+          value={category}
+          onChange={(e) => updateFilter("category", e.target.value)}
+          className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500"
+        >
+          <option value={""}>Todas</option>
+          <option value={"base"}>Bases</option>
+          <option value={"labial"}>Labiales</option>
+          <option value={"sombra"}>Sombras</option>
+          <option value={"iluminador"}>Iluminadores</option>
+        </select>
+      </div>
 
       {/* Precio */}
       <div>
@@ -20,19 +51,6 @@ export default function Filters() {
             className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500"
           />
         </div>
-      </div>
-
-      {/* Categoría */}
-      <div>
-        <h3 className="text-sm font-medium mb-3">Categoría</h3>
-
-        <select className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500">
-          <option>Todas</option>
-          <option>Bases</option>
-          <option>Labiales</option>
-          <option>Sombras</option>
-          <option>Iluminadores</option>
-        </select>
       </div>
 
       {/* Disponibilidad */}
