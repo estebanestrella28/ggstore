@@ -40,12 +40,15 @@ export default function Filters() {
 
         <div className="flex gap-3">
           <input
+            onChange={(e) => updateFilter("priceMin", e.target.value)}
             type="number"
             placeholder="Min"
             className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500"
           />
 
           <input
+            defaultValue={undefined}
+            onChange={(e) => updateFilter("priceMax", e.target.value)}
             type="number"
             placeholder="Max"
             className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500"

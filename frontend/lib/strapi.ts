@@ -44,13 +44,27 @@ type getProductsProps = {
 };
 
 export function getProducts({ filters }: getProductsProps = {}) {
-  const newFilters = filters?.category
-    ? `filters[category][slug][$eq]=${filters.category}`
-    : "";
+  const parts = [];
 
-  return query(
-    `products?${newFilters}&populate[images][fields][0]=url&populate[category][fields][0]=name`,
-  ).then((res) => {
+  if (filters?.category) {
+    parts.push(`filters[category][slug][$eq]=${filters.category}`);
+  }
+
+  if (filters?.priceMin !== undefined && filters.priceMin > 0) {
+    parts.push(`filters[price][$gte]=${filters.priceMin}`);
+  }
+
+  if (filters?.priceMax !== undefined && filters.priceMax > 0) {
+    parts.push(`filters[price][$lte]=${filters.priceMax}`);
+  }
+
+  // add populate
+  parts.push(`populate[images][fields][0]=url`);
+  parts.push(`populate[category][fields][0]=name`);
+
+  const queryString = parts.length ? `?${parts.join("&")}` : "";
+
+  return query(`products${queryString}`).then((res) => {
     const { data, meta } = res;
 
     const products = data.map((product: any) => {

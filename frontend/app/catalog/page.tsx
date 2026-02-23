@@ -7,7 +7,7 @@ interface Props {
 }
 
 export default async function CatalogPage({ searchParams }: Props) {
-  const params = await searchParams; // ⭐ CLAVE
+  const params = await searchParams;
   const filters = parseFilters(params);
   return (
     <>
