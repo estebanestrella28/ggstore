@@ -1,4 +1,5 @@
 import { FiltersState } from "@/types/filters";
+import type { Product, ProductAPI } from "@/types/products";
 import formatCurrency from "@/util/formatCurrency";
 
 const { STRAPI_HOST, STRAPI_TOKEN } = process.env;
@@ -46,6 +47,10 @@ type getProductsProps = {
 export function getProducts({ filters }: getProductsProps = {}) {
   const parts = [];
 
+  if (filters?.search) {
+    parts.push(`filters[title][$contains]=${filters.search}`);
+  }
+
   if (filters?.category) {
     parts.push(`filters[category][slug][$eq]=${filters.category}`);
   }
@@ -67,11 +72,14 @@ export function getProducts({ filters }: getProductsProps = {}) {
   return query(`products${queryString}`).then((res) => {
     const { data, meta } = res;
 
-    const products = data.map((product: any) => {
+    const products: Product[] = data.map((product: ProductAPI) => {
       const { id, title, price: rawPrice, slug, images: rawImages } = product;
-      const images = rawImages.map(
-        (image: any) => `${STRAPI_HOST}${image.url}`,
-      );
+
+      const images = rawImages
+        ? rawImages.map((image) => {
+            return `${STRAPI_HOST}${image.url}`;
+          })
+        : ["logo2.png"];
 
       const price = formatCurrency(rawPrice);
 

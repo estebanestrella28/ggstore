@@ -5,6 +5,7 @@ export default function Filters() {
   const router = useRouter();
   const params = useSearchParams();
   const category = params.get("category") ?? "";
+  const search = params.get("search") ?? "";
 
   const updateFilter = (key: string, value: string) => {
     const newParams = new URLSearchParams(params);
@@ -16,6 +17,16 @@ export default function Filters() {
   return (
     <div className="bg-white rounded-2xl shadow-sm p-6 space-y-8">
       <h2 className="text-lg font-semibold">Filtros</h2>
+
+      <div>
+        <h3 className="text-sm font-medium mb-3">Busqueda</h3>
+        <input
+          onChange={(e) => updateFilter("search", e.target.value)}
+          value={search}
+          type="text"
+          className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500"
+        />
+      </div>
 
       {/* Categoría */}
       <div>
