@@ -1,18 +1,40 @@
 "use client";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useMemo, useState } from "react";
 
 export default function Filters() {
   const router = useRouter();
   const params = useSearchParams();
   const category = params.get("category") ?? "";
-  const search = params.get("search") ?? "";
+  const defSearch = params.get("search") ?? "";
+  const pathname = usePathname();
+
+  let [search, setSearch] = useState(defSearch);
 
   const updateFilter = (key: string, value: string) => {
     const newParams = new URLSearchParams(params);
     newParams.set(key, value);
 
-    router.push(`/catalog?${newParams.toString()}`);
+    router.replace(`${pathname}?${newParams.toString()}`);
   };
+
+  const handleChange = (value: string) => {
+    setSearch(value);
+  };
+
+  function debounce<T extends (...args: any[]) => void>(fn: T, delay: number) {
+    let timer: ReturnType<typeof setTimeout>;
+
+    return (...args: Parameters<T>) => {
+      clearTimeout(timer);
+
+      timer = setTimeout(() => {
+        fn(...args);
+      }, delay);
+    };
+  }
+
+  const debouncedUpdateFilter = useMemo(() => debounce(updateFilter, 500), []);
 
   return (
     <div className="bg-white rounded-2xl shadow-sm p-6 space-y-8">
@@ -21,7 +43,10 @@ export default function Filters() {
       <div>
         <h3 className="text-sm font-medium mb-3">Busqueda</h3>
         <input
-          onChange={(e) => updateFilter("search", e.target.value)}
+          onChange={(e) => {
+            handleChange(e.target.value);
+            debouncedUpdateFilter("search", e.target.value);
+          }}
           value={search}
           type="text"
           className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500"
