@@ -73,15 +73,13 @@ export function getProducts({ filters }: getProductsProps = {}) {
     const { data, meta } = res;
 
     const products: Product[] = data.map((product: ProductAPI) => {
-      const { id, title, price: rawPrice, slug, images: rawImages } = product;
+      const { id, title, price, slug, images: rawImages } = product;
 
       const images = rawImages
         ? rawImages.map((image) => {
             return `${STRAPI_HOST}${image.url}`;
           })
         : ["logo2.png"];
-
-      const price = formatCurrency(rawPrice);
 
       return { id, title, price, slug, images };
     });
