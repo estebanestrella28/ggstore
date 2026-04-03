@@ -1,6 +1,6 @@
+import { Category, CategoryAPI } from "@/types/categories";
 import { FiltersState } from "@/types/filters";
 import type { Product, ProductAPI } from "@/types/products";
-import formatCurrency from "@/util/formatCurrency";
 
 const { STRAPI_HOST, STRAPI_TOKEN } = process.env;
 
@@ -31,7 +31,7 @@ export function getCategories() {
   return query("categories?populate[image][fields][0]=url").then((res) => {
     const { data, meta } = res;
 
-    return data.map((category) => {
+    return data.map((category: CategoryAPI): Category => {
       const { id, name, slug, image: rawImage } = category;
       const image = `${STRAPI_HOST}${rawImage.url}`;
 
@@ -85,5 +85,38 @@ export function getProducts({ filters }: getProductsProps = {}) {
     });
 
     return { products, pagination: meta.pagination };
+  });
+}
+
+export function getProductsById(ids: number[]) {
+  if (!ids.length) return Promise.resolve({ products: [] });
+
+  const parts = [];
+
+  // 🔴 ESTE es el filtro clave
+  ids.forEach((id, index) => {
+    parts.push(`filters[id][$in][${index}]=${id}`);
+  });
+
+  // populate (igual que ya haces)
+  parts.push(`populate[images][fields][0]=url`);
+  parts.push(`populate[category][fields][0]=name`);
+
+  const queryString = `?${parts.join("&")}`;
+
+  return query(`products${queryString}`).then((res) => {
+    const { data } = res;
+
+    const products: Product[] = data.map((product: ProductAPI) => {
+      const { id, title, price, slug, images: rawImages } = product;
+
+      const images = rawImages
+        ? rawImages.map((image) => `${STRAPI_HOST}${image.url}`)
+        : ["logo2.png"];
+
+      return { id, title, price, slug, images };
+    });
+
+    return { products };
   });
 }

@@ -1,6 +1,11 @@
+"use client";
+
+import { useCartStore } from "@/store/cartStore";
 import { Bell, Search as SearchIcon, ShoppingBagIcon } from "lucide-react";
 
 export default function Search() {
+  const count = useCartStore((state) => state.items.length);
+
   return (
     <section className="flex items-center gap-6 w-full">
       <div className="w-40 flex justify-end">
@@ -36,9 +41,13 @@ export default function Search() {
       </div>
 
       <div className="flex items-center gap-2">
-        <button className="p-2 rounded-md hover:bg-gray-100 transition">
+        <a
+          href="/cart"
+          className="flex items-center gap-1 p-2 rounded-md hover:bg-gray-100 transition"
+        >
           <ShoppingBagIcon className="w-5 h-5 text-gray-500 hover:text-gray-800" />
-        </button>
+          <span className="text-sm">{count}</span>
+        </a>
         <button className="p-2 rounded-md hover:bg-gray-100 transition">
           <Bell className="w-5 h-5 text-gray-500 hover:text-gray-800" />
         </button>

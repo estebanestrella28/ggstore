@@ -1,56 +1,56 @@
 "use client";
 
-import { addToCart } from "@/lib/cart";
+import { useCartStore } from "@/store/cartStore";
 import type { Product } from "@/types/products";
-import { use } from "react";
+import formatCurrency from "@/util/formatCurrency";
 
 interface ProductCardProps {
   product: Product;
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
+  const addItem = useCartStore((state) => state.addItem);
+
+  const image = product.images?.[0] || "/logo2.png";
+
+  const formatedCurrency = formatCurrency(product.price);
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault(); // 🔴 evita navegar si está dentro de <a>
+    addItem(product.id, 1);
+  };
+
   return (
-    <div>
-      <a
-        href={`/product/${product.id}`}
-        className="group block rounded-xl bg-white/80 p-3 shadow-sm transition hover:shadow-md"
-      >
-        <div className="relative mb-3 h-32 w-32 overflow-hidden rounded-lg bg-gray-100">
-          {product.images?.length && (
-            <img
-              src={product.images[0]}
-              alt={product.slug}
-              className="h-full w-full object-cover"
-            />
-          )}
+    <div className="group rounded-xl border border-gray-200 bg-white p-3 shadow-sm transition hover:shadow-md">
+      {/* Imagen + link */}
+      <a href={`/product/${product.id}`} className="block">
+        <div className="relative mb-3 aspect-square w-full overflow-hidden rounded-lg bg-gray-100">
+          <img
+            src={image}
+            alt={product.title}
+            className="h-full w-full object-cover transition group-hover:scale-105"
+          />
         </div>
 
-        <div className="flex flex-col gap-2">
+        {/* Info */}
+        <div className="flex flex-col gap-1">
           <h2 className="text-sm font-medium leading-tight line-clamp-2">
             {product.title}
           </h2>
 
-          <span className="text-lg font-bold text-red-400">
-            {product.price}
+          <span className="text-lg font-bold text-red-500">
+            {formatedCurrency}
           </span>
         </div>
       </a>
-      <div>
-        <button
-          onClick={() =>
-            addToCart({
-              variantId: product.id,
-              productName: product.slug,
-              variantLabel: product.title,
-              image: product.images[0],
-              price: product.price,
-              quantity: 1,
-            })
-          }
-        >
-          Añadir al carrito
-        </button>
-      </div>
+
+      {/* Acción */}
+      <button
+        onClick={handleAddToCart}
+        className="mt-3 w-full rounded-lg bg-red-500 py-2 text-sm font-medium text-white transition hover:bg-red-600 active:scale-[0.98]"
+      >
+        Añadir al carrito
+      </button>
     </div>
   );
 }
