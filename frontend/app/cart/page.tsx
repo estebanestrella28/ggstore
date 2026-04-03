@@ -40,9 +40,12 @@ export default function CartPage() {
         <CartItemCard key={el.variantId} item={el} />
       ))}
 
-      <button className="w-full mt-5 rounded-xl py-3 text-sm font-semibold bg-red-500 text-white hover:bg-red-600 transition active:scale-[0.98]">
+      <a
+        href="/checkout"
+        className=" flex justify-center w-full mt-5 rounded-xl py-3 text-sm font-semibold bg-red-500 text-white hover:bg-red-600 transition active:scale-[0.98]"
+      >
         Proceder al checkout
-      </button>
+      </a>
     </>
   );
 }
