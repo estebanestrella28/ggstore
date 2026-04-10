@@ -1,24 +1,25 @@
+import { CartItem } from "@/types/cart";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-export type CartItem = {
-  variantId: number;
-  quantity: number;
-};
-
 type CartStore = {
   items: CartItem[];
+  hasHydrated: boolean;
 
   addItem: (variantId: number, quantity?: number) => void;
   removeItem: (variantId: number) => void;
   updateQuantity: (variantId: number, quantity: number) => void;
   clearCart: () => void;
+  setHasHydrated: (state: boolean) => void;
 };
 
 export const useCartStore = create<CartStore>()(
   persist(
     (set, get) => ({
       items: [],
+      hasHydrated: false,
+
+      setHasHydrated: (state) => set({ hasHydrated: state }),
 
       addItem: (variantId, quantity = 1) => {
         const items = get().items;
@@ -62,7 +63,10 @@ export const useCartStore = create<CartStore>()(
       clearCart: () => set({ items: [] }),
     }),
     {
-      name: "cart-storage", // key en localStorage
+      name: "cart-storage",
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true);
+      },
     },
   ),
 );
