@@ -1,3 +1,5 @@
+import { OrderStatus } from "@/lib/generated/prisma/enums";
+import { prisma } from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
@@ -50,8 +52,16 @@ export async function POST(req: Request) {
           console.log(`Payment status: ${data.status}`);
           console.log(`Pago confirmado: ${data.id}`);
           console.log(`Monto: ${data.amount}`);
-          console.log(`Metadata: ${data.metadata.items}`);
+          console.log(`Metadata: ${data.metadata.orderId}`);
           console.log(`_________________________`);
+
+          // 5️⃣ Vincular la orden con Stripe
+          await prisma.order.update({
+            where: { id: data.metadata.orderId },
+            data: {
+              status: OrderStatus.paid,
+            },
+          });
 
           break;
         default:

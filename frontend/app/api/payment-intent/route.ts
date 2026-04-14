@@ -2,31 +2,8 @@ import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { getProductsById } from "@/lib/strapi";
 import { CartItem } from "@/types/cart";
-
-const amountInCents = (amount: number): number => Math.round(amount * 100);
-
-async function calculateOrderAmount(
-  ids: number[],
-  cartItems: CartItem[],
-): Promise<number> {
-  const { products } = await getProductsById(ids);
-
-  if (products.length !== ids.length) {
-    throw new Error("Algunos productos no existen.");
-  }
-
-  const productMap = new Map(products.map((product) => [product.id, product]));
-
-  return cartItems.reduce((acc, item) => {
-    const product = productMap.get(item.variantId);
-
-    if (!product) {
-      throw new Error(`Producto no encontrado: ${item.variantId}`);
-    }
-
-    return acc + product.price * item.quantity;
-  }, 0);
-}
+import { prisma } from "@/lib/prisma";
+import { OrderStatus } from "@/lib/generated/prisma/enums";
 
 export async function POST(req: Request) {
   try {
@@ -40,22 +17,73 @@ export async function POST(req: Request) {
         { status: 400 },
       );
     }
-
     const ids = items.map((item: any) => item.variantId);
+
+    // OBTENER LOS PRODUCTOS DE STRAPI
+    const { products } = await getProductsById(ids);
+
+    if (products.length !== ids.length) {
+      throw new Error("Algunos productos no existen.");
+    }
+
+    const productMap = new Map(
+      products.map((product) => [product.id, product]),
+    );
+
+    // CREAR EL SNAPSHOT DE LOS PRODUCTOS
+    const itemsSnapshot = items.map((item: CartItem) => {
+      const product = productMap.get(item.variantId);
+
+      if (!product) {
+        throw new Error(`Producto no encontrado: ${item.variantId}`);
+      }
+
+      const price = product.price;
+      const name = product.title;
+
+      return {
+        productId: product.id,
+        name,
+        price,
+        quantity: item.quantity,
+        subtotal: price * item.quantity,
+      };
+    });
 
     // OBTENER EL VALOR DE LOS PRODUCTOS
 
-    const total = await calculateOrderAmount(ids, items);
+    const totalAmount = itemsSnapshot.reduce((acc, item) => {
+      return acc + item.subtotal;
+    }, 0);
+
+    const amountInCents = Math.round(totalAmount * 100);
+
+    // Crear orden en db
+    const order = await prisma.order.create({
+      data: {
+        amount: amountInCents,
+        status: OrderStatus.pending,
+        items: itemsSnapshot,
+      },
+    });
 
     // CREAR EL PAYMENT INTENT
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: amountInCents(total),
+      amount: amountInCents,
       currency: "usd",
       automatic_payment_methods: {
         enabled: true,
       },
       metadata: {
-        items: JSON.stringify(items),
+        orderId: order.id,
+      },
+    });
+
+    // 5️⃣ Vincular la orden con Stripe
+    await prisma.order.update({
+      where: { id: order.id },
+      data: {
+        stripePaymentIntentId: paymentIntent.id,
       },
     });
 
