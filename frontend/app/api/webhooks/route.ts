@@ -38,7 +38,11 @@ export async function POST(req: Request) {
     );
   }
 
-  const permittedEvents = ["payment_intent.succeeded"];
+  const permittedEvents = [
+    "payment_intent.succeeded",
+    "payment_intent.payment_failed",
+    "payment_intent.canceled",
+  ];
 
   if (permittedEvents.includes(event.type)) {
     let data;
@@ -55,17 +59,64 @@ export async function POST(req: Request) {
           console.log(`Metadata: ${data.metadata.orderId}`);
           console.log(`_________________________`);
 
-          // 5️⃣ Vincular la orden con Stripe
-          await prisma.order.update({
-            where: { id: data.metadata.orderId },
+          // Actializar orden status en DB
+          await prisma.order.updateMany({
+            where: {
+              id: data.metadata.orderId,
+              status: { in: [OrderStatus.pending] },
+            },
             data: {
               status: OrderStatus.paid,
             },
           });
 
           break;
+        case "payment_intent.payment_failed":
+          data = event.data.object as Stripe.PaymentIntent;
+
+          console.log(`_________________________`);
+          console.log(`Payment status: ${data.status}`);
+          console.log(`Pago fallido: ${data.id}`);
+          console.log(`Monto: ${data.amount}`);
+          console.log(`Metadata: ${data.metadata.orderId}`);
+          console.log(`_________________________`);
+
+          // Actializar orden status en DB
+          await prisma.order.updateMany({
+            where: {
+              id: data.metadata.orderId,
+              status: { in: [OrderStatus.pending] },
+            },
+            data: {
+              status: OrderStatus.failed,
+            },
+          });
+
+          break;
+        case "payment_intent.canceled":
+          data = event.data.object as Stripe.PaymentIntent;
+
+          console.log(`_________________________`);
+          console.log(`Payment status: ${data.status}`);
+          console.log(`Pago cancelado: ${data.id}`);
+          console.log(`Monto: ${data.amount}`);
+          console.log(`Metadata: ${data.metadata.orderId}`);
+          console.log(`_________________________`);
+
+          // Actializar orden status en DB
+          await prisma.order.updateMany({
+            where: {
+              id: data.metadata.orderId,
+              status: { in: [OrderStatus.pending, OrderStatus.failed] },
+            },
+            data: {
+              status: OrderStatus.canceled,
+            },
+          });
+
+          break;
         default:
-          throw new Error(`Unhandled event: ${event.type}`);
+          throw new Error(`Unhandled payment event: ${event.type}`);
       }
     } catch (error) {
       console.error(error);

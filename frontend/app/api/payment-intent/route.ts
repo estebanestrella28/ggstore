@@ -58,34 +58,117 @@ export async function POST(req: Request) {
 
     const amountInCents = Math.round(totalAmount * 100);
 
-    // Crear orden en db
-    const order = await prisma.order.create({
-      data: {
-        amount: amountInCents,
+    // Verifica si existe una orden pendiente
+
+    let order = await prisma.order.findFirst({
+      where: {
         status: OrderStatus.pending,
-        items: itemsSnapshot,
+        amount: amountInCents,
+      },
+      orderBy: {
+        createdAt: "desc",
       },
     });
 
-    // CREAR EL PAYMENT INTENT
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: amountInCents,
-      currency: "usd",
-      automatic_payment_methods: {
-        enabled: true,
-      },
-      metadata: {
-        orderId: order.id,
-      },
-    });
+    let paymentIntent;
 
-    // 5️⃣ Vincular la orden con Stripe
-    await prisma.order.update({
-      where: { id: order.id },
-      data: {
-        stripePaymentIntentId: paymentIntent.id,
-      },
-    });
+    if (order) {
+      // recuperar el payment intent de la orden
+      if (order.stripePaymentIntentId) {
+        paymentIntent = await stripe.paymentIntents.retrieve(
+          order.stripePaymentIntentId,
+        );
+
+        if (
+          paymentIntent?.status === "canceled" ||
+          paymentIntent?.status === "succeeded"
+        ) {
+          // CREAR EL PAYMENT INTENT
+          paymentIntent = await stripe.paymentIntents.create({
+            amount: amountInCents,
+            currency: "usd",
+            automatic_payment_methods: {
+              enabled: true,
+            },
+            metadata: {
+              orderId: order.id,
+            },
+          });
+          // Vincula el nuevo PI con la orden recuperada
+          await prisma.order.update({
+            where: { id: order.id },
+            data: {
+              stripePaymentIntentId: paymentIntent.id,
+            },
+          });
+        }
+
+        if (paymentIntent?.amount !== amountInCents && paymentIntent?.id) {
+          paymentIntent = await stripe.paymentIntents.update(paymentIntent.id, {
+            amount: amountInCents,
+          });
+          // Si el amount es diferente es porque algo en el carrito cambió
+          // Vincula el nuevo amount y ItemSnapshot del order pendiente recuperada
+          await prisma.order.update({
+            where: { id: order.id },
+            data: {
+              amount: amountInCents,
+              items: itemsSnapshot,
+            },
+          });
+        }
+      } else {
+        // Si el order no tiene un paymentIntent viculado
+
+        // CREAR EL PAYMENT INTENT
+        paymentIntent = await stripe.paymentIntents.create({
+          amount: amountInCents,
+          currency: "usd",
+          automatic_payment_methods: {
+            enabled: true,
+          },
+          metadata: {
+            orderId: order.id,
+          },
+        });
+
+        await prisma.order.update({
+          where: { id: order.id },
+          data: {
+            stripePaymentIntentId: paymentIntent.id,
+          },
+        });
+      }
+    } else {
+      // Crear orden en db
+      order = await prisma.order.create({
+        data: {
+          amount: amountInCents,
+          status: OrderStatus.pending,
+          items: itemsSnapshot,
+        },
+      });
+
+      // CREAR EL PAYMENT INTENT
+      paymentIntent = await stripe.paymentIntents.create({
+        amount: amountInCents,
+        currency: "usd",
+        automatic_payment_methods: {
+          enabled: true,
+        },
+        metadata: {
+          orderId: order.id,
+        },
+      });
+
+      // Vincular la orden con Stripe
+      await prisma.order.update({
+        where: { id: order.id },
+        data: {
+          stripePaymentIntentId: paymentIntent.id,
+        },
+      });
+    }
 
     return NextResponse.json({
       clientSecret: paymentIntent.client_secret,
