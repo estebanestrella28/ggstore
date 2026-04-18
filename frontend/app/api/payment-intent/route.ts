@@ -4,6 +4,7 @@ import { getProductsById } from "@/lib/strapi";
 import { CartItem } from "@/types/cart";
 import { prisma } from "@/lib/prisma";
 import { OrderStatus } from "@/lib/generated/prisma/enums";
+import { expireOldOrders } from "@/lib/orders/expiredOldOrders";
 
 export async function POST(req: Request) {
   try {
@@ -57,6 +58,9 @@ export async function POST(req: Request) {
     }, 0);
 
     const amountInCents = Math.round(totalAmount * 100);
+
+    // Expirar ordenes antiguas
+    await expireOldOrders();
 
     // Verifica si existe una orden pendiente
 

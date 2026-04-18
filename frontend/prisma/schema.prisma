@@ -17,6 +17,7 @@ enum OrderStatus {
   paid
   failed
   canceled
+  expired
 }
 
 model Order {
