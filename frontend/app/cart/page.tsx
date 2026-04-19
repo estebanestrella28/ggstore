@@ -34,6 +34,17 @@ export default function CartPage() {
     };
   });
 
+  if (enrichedCart.length === 0) {
+    return (
+      <>
+        <div>Tu Carrito está vacío</div>
+        <a className="text-blue-600 hover:underline" href="/catalog">
+          Sigue comprando
+        </a>
+      </>
+    );
+  }
+
   return (
     <>
       {enrichedCart.map((el) => (
